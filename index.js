@@ -57,11 +57,29 @@ function querystring(query) {
     // In the case if failed decoding, we want to omit the key/value pairs
     // from the result.
     //
-    if (key === null || value === null || key in result) continue;
+    if (key === null || value === null) continue;
+    if(has.call(result, key)){
+      if(!Array.isArray(result[key])){
+        result[key] = [result[key]]
+      }
+      result[key].push(value)
+      continue
+    }
+
+    if(key in result) continue;
     result[key] = value;
   }
 
   return result;
+}
+
+
+function sanitize(value) {
+  if (!value && (value === null || value === undef || isNaN(value))) {
+    value = '';
+  }
+
+  return value;
 }
 
 /**
@@ -77,6 +95,7 @@ function querystringify(obj, prefix) {
 
   var pairs = []
     , value
+    , encValue
     , key;
 
   //
@@ -88,23 +107,22 @@ function querystringify(obj, prefix) {
     if (has.call(obj, key)) {
       value = obj[key];
 
-      //
-      // Edge cases where we actually want to encode the value to an empty
-      // string instead of the stringified value.
-      //
-      if (!value && (value === null || value === undef || isNaN(value))) {
-        value = '';
-      }
-
       key = encodeURIComponent(key);
-      value = encodeURIComponent(value);
 
-      //
-      // If we failed to encode the strings, we should bail out as we don't
-      // want to add invalid strings to the query.
-      //
-      if (key === null || value === null) continue;
-      pairs.push(key +'='+ value);
+      if(!Array.isArray(value)){
+        value = [value];
+      }
+ 
+      for (var i = 0; i < value.length; i++) {
+        encValue = encodeURIComponent(sanitize(value[i]));
+        //
+        // If we failed to encode the strings, we should bail out as we don't
+        // want to add invalid strings to the query.
+        //
+        if (key === null || encValue === null) continue;
+
+        pairs.push(key +'='+ encValue);
+      }
     }
   }
 

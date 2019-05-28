@@ -54,6 +54,10 @@ describe('querystringify', function () {
     it('transforms `null` into nothing', function () {
       assume(qs.stringify({ foo: null })).equals('foo=');
     });
+
+    it('transforms `Array` into multiple pairs', function () {
+      assume(qs.stringify({ foo: [1,2, null] })).equals('foo=1&foo=2&foo=');
+    });
   });
 
   describe('#parse', function () {
@@ -66,6 +70,16 @@ describe('querystringify', function () {
 
       assume(obj).is.a('object');
       assume(obj.foo).equals('bar');
+    });
+
+    it('will parse a querystring to an object with Arrays', function () {
+      var obj = qs.parse('foo=bar&foo=baz&foo');
+
+      assume(obj).is.a('object');
+      assume(obj.foo[0]).equals('bar');
+      assume(obj.foo[1]).equals('baz');
+      assume(obj.foo[2]).equals('');
+      assume(obj.foo.length).equals(3);
     });
 
     it('will also work if querystring is prefixed with ?', function () {
